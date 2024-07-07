@@ -4,7 +4,7 @@ import pandas as pd
 
 # Function to convert RGB to HSV
 def rgb_to_hsv(r, g, b):
-    color = np.uint8([[[b, g, r]]])  
+    color = np.uint8([[[b, g, r]]])  # OpenCV uses BGR format
     hsv_color = cv2.cvtColor(color, cv2.COLOR_BGR2HSV)
     return hsv_color[0][0]
 
@@ -49,7 +49,7 @@ def draw_quadrants(frame, vertical_line, horizontal_line):
     return frame
 
 # Set up video capture
-video_path = r"C:\Users\hp\Documents\Assigments\AI Assignment video.mp4" 
+video_path = r"C:\Users\hp\Documents\Assigments\AI Assignment video.mp4"  # Provide the path to your video file
 cap = cv2.VideoCapture(video_path)
 
 # Get video properties
@@ -74,7 +74,9 @@ events = []
 
 # Assuming the red lines are vertical and horizontal at specific positions
 vertical_line = int(0.65 * width)  
-horizontal_line = height // 2  
+horizontal_line = height // 2 
+
+last_display_time = {color: 0 for color in ball_colors}
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -102,18 +104,25 @@ while cap.isOpened():
                 if previous_quadrant is None:
                     ball_prev_quadrants[color] = current_quadrant
                 elif current_quadrant != previous_quadrant:
-                    events.append((timestamp, previous_quadrant, color, "Exit"))
-                    events.append((timestamp, current_quadrant, color, "Entry"))
-                    cv2.putText(frame, f"{color} {current_quadrant} Entry", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    # Only update if sufficient time has passed since last display
+                    if timestamp - last_display_time[color] > 0.2:  
+                        events.append((timestamp, previous_quadrant, color, "Exit"))
+                        events.append((timestamp, current_quadrant, color, "Entry"))
+                        cv2.putText(frame, f"{color} {current_quadrant} Entry", (cx - 50, cy + 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
+                        last_display_time[color] = timestamp
                     ball_prev_quadrants[color] = current_quadrant
 
                 ball_present = True
 
         if ball_present and not ball_prev_presence[color]:
-            events.append((timestamp, ball_prev_quadrants[color], color, "Entry"))
+            if timestamp - last_display_time[color] > 1.0:  
+                events.append((timestamp, ball_prev_quadrants[color], color, "Entry"))
+                last_display_time[color] = timestamp
             ball_prev_presence[color] = True
         elif not ball_present and ball_prev_presence[color]:
-            events.append((timestamp, ball_prev_quadrants[color], color, "Exit"))
+            if timestamp - last_display_time[color] > 1.0:  
+                events.append((timestamp, ball_prev_quadrants[color], color, "Exit"))
+                last_display_time[color] = timestamp
             ball_prev_presence[color] = False
 
     out.write(frame)
@@ -127,6 +136,6 @@ cv2.destroyAllWindows()
 
 # Save events to text file
 events_df = pd.DataFrame(events, columns=["Time", "Quadrant Number", "Ball Colour", "Type"])
-events_df.to_csv(r"C:\Users\hp\Documents\Assigments\Event_Record.txt", index=False)
+events_df.to_csv(r"C:\Users\hp\Documents\Assigments\Event Output.txt", index=False)
 
 print("Processing complete. Processed video and events file saved.")
