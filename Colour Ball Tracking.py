@@ -4,7 +4,7 @@ import pandas as pd
 
 # Function to convert RGB to HSV
 def rgb_to_hsv(r, g, b):
-    color = np.uint8([[[b, g, r]]])  # OpenCV uses BGR format
+    color = np.uint8([[[b, g, r]]])  
     hsv_color = cv2.cvtColor(color, cv2.COLOR_BGR2HSV)
     return hsv_color[0][0]
 
@@ -49,7 +49,7 @@ def draw_quadrants(frame, vertical_line, horizontal_line):
     return frame
 
 # Set up video capture
-video_path = r"C:\Users\hp\Documents\Assigments\AI Assignment video.mp4"  # Provide the path to your video file
+video_path = r"C:\Users\hp\Documents\Assigments\AI Assignment video.mp4" 
 cap = cv2.VideoCapture(video_path)
 
 # Get video properties
@@ -72,9 +72,9 @@ ball_prev_presence = {"yellow": False, "white": False, "green": False, "orange":
 # List to store events
 events = []
 
-# Assuming the red lines are vertical and horizontal at specific positions (adjust based on your image)
-vertical_line = int(0.65 * width)  # Move the vertical line to 30% of the frame's width
-horizontal_line = height // 2  # Horizontal line in the middle of the frame
+# Assuming the red lines are vertical and horizontal at specific positions
+vertical_line = int(0.65 * width)  
+horizontal_line = height // 2  
 
 while cap.isOpened():
     ret, frame = cap.read()
